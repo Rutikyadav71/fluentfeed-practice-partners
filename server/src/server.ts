@@ -1,24 +1,16 @@
-import express, { Request, Response } from "express";
-import cors from "cors";
-import dotenv from "dotenv";
+import app from "./app";
+import { connectDB } from "./config/db";
+import { env } from "./config/env";
 
-dotenv.config();
+async function start(): Promise<void> {
+  await connectDB();
 
-const app = express();
-const PORT = process.env.PORT || 5000;
-const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
-
-app.use(cors({ origin: CLIENT_URL }));
-app.use(express.json());
-
-app.get("/api/health", (_req: Request, res: Response) => {
-  res.status(200).json({
-    success: true,
-    data: { status: "ok" },
-    message: "FluentFeed API is running",
+  app.listen(env.PORT, () => {
+    console.log(`FluentFeed server listening on port ${env.PORT}`);
   });
-});
+}
 
-app.listen(PORT, () => {
-  console.log(`FluentFeed server listening on port ${PORT}`);
+start().catch((error) => {
+  console.error("Failed to start server:", error);
+  process.exit(1);
 });
