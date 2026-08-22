@@ -13,7 +13,7 @@ export function MatchScoreBadge({ score }: MatchScoreBadgeProps) {
   return (
     <div className="flex flex-col items-end gap-1">
       <span className={`rounded-full px-3 py-1 text-sm font-bold ${color}`}>{score}% Match</span>
-      <div className="h-1.5 w-24 overflow-hidden rounded-full bg-gray-100">
+      <div className="h-1.5 w-16 overflow-hidden rounded-full bg-gray-100 sm:w-24">
         <div className="h-full rounded-full bg-brand-500" style={{ width: `${score}%` }} />
       </div>
     </div>

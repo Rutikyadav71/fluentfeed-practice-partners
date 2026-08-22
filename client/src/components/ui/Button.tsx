@@ -1,7 +1,7 @@
 import { ButtonHTMLAttributes, ReactNode } from "react";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary" | "danger" | "ghost";
+  variant?: "primary" | "secondary" | "danger" | "ghost" | "connected";
   isLoading?: boolean;
   children: ReactNode;
 }
@@ -11,6 +11,10 @@ const variantClasses: Record<string, string> = {
   secondary: "bg-gray-100 hover:bg-gray-200 text-gray-800",
   danger: "bg-red-600 hover:bg-red-700 text-white",
   ghost: "bg-transparent hover:bg-gray-100 text-gray-700",
+  // Used for an already-connected partner: stays solid green and fully
+  // opaque even while disabled, so it reads as a confirmed state rather
+  // than a greyed-out/broken button.
+  connected: "bg-green-600 text-white disabled:opacity-100",
 };
 
 export function Button({

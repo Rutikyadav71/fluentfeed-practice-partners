@@ -1,7 +1,8 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useMatches } from "../hooks/useMatches";
+import { useConnections } from "../hooks/useConnections";
 import { useCurrentUser } from "../context/CurrentUserContext";
-import { PartnerCard } from "../components/matches/PartnerCard";
+import { PartnerCard, ConnectionButtonStatus } from "../components/matches/PartnerCard";
 import { FilterBar } from "../components/matches/FilterBar";
 import { Spinner } from "../components/ui/Spinner";
 import { ErrorState } from "../components/ui/ErrorState";
@@ -15,6 +16,7 @@ import { getApiErrorMessage } from "../services/api";
 export default function Matches() {
   const { currentUserId } = useCurrentUser();
   const { matches, loading, error, refetch } = useMatches();
+  const { connections, refetch: refetchConnections } = useConnections();
 
   const [filters, setFilters] = useState({ englishLevel: "", learningGoal: "", country: "" });
   const [browseUsers, setBrowseUsers] = useState<User[]>([]);
@@ -23,7 +25,26 @@ export default function Matches() {
 
   const [connectMessage, setConnectMessage] = useState<string | null>(null);
   const [connectError, setConnectError] = useState<string | null>(null);
-  const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
+
+  // Maps a partner's user id to their real connection state with the
+  // current user, sourced from GET /api/connections (not just "did I click
+  // Connect this session"). This is what lets the button show "✓ Connected"
+  // or "Request Sent" up front, before the user ever presses it.
+  const statusByUserId = useMemo(() => {
+    const map = new Map<string, ConnectionButtonStatus>();
+    for (const conn of connections.connected) {
+      const partnerId = conn.senderId._id === currentUserId ? conn.receiverId._id : conn.senderId._id;
+      map.set(partnerId, "connected");
+    }
+    for (const conn of connections.outgoing) {
+      if (!map.has(conn.receiverId._id)) map.set(conn.receiverId._id, "pending");
+    }
+    return map;
+  }, [connections, currentUserId]);
+
+  function getStatus(userId: string): ConnectionButtonStatus {
+    return statusByUserId.get(userId) ?? "none";
+  }
 
   const loadBrowseUsers = useCallback(async () => {
     if (!currentUserId) return;
@@ -48,8 +69,8 @@ export default function Matches() {
     setConnectError(null);
     try {
       await connectionService.send(receiverId);
-      setPendingIds((prev) => new Set(prev).add(receiverId));
       setConnectMessage("Connection request sent successfully.");
+      await refetchConnections();
     } catch (err) {
       setConnectError(getApiErrorMessage(err));
     }
@@ -101,8 +122,7 @@ export default function Matches() {
                 matchScore={match.matchScore}
                 matchReasons={match.matchReasons}
                 onConnect={() => handleConnect(match._id)}
-                connectDisabled={pendingIds.has(match._id)}
-                connectLabel={pendingIds.has(match._id) ? "Request Sent" : "Connect"}
+                connectionStatus={getStatus(match._id)}
               />
             ))}
           </div>
@@ -142,8 +162,7 @@ export default function Matches() {
                   preferredTime={user.preferredTime}
                   bio={user.bio}
                   onConnect={() => handleConnect(user._id)}
-                  connectDisabled={pendingIds.has(user._id)}
-                  connectLabel={pendingIds.has(user._id) ? "Request Sent" : "Connect"}
+                  connectionStatus={getStatus(user._id)}
                 />
               ))}
             </div>
