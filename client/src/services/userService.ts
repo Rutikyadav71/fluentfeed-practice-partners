@@ -17,4 +17,13 @@ export const userService = {
     const res = await api.get<ApiSuccess<User[]>>(`/users?${params.toString()}`);
     return res.data.data;
   },
+
+  /**
+   * Fetches every demo user so the app-wide "Current User" switcher can list
+   * them by name. Reuses GET /api/users with no filters.
+   */
+  async listAll(): Promise<User[]> {
+    const res = await api.get<ApiSuccess<User[]>>("/users");
+    return res.data.data;
+  },
 };
