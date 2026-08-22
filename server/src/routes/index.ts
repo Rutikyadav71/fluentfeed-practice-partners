@@ -11,6 +11,8 @@ router.use("/users", userRoutes);
 router.use("/matches", matchRoutes);
 router.use("/connections", connectionRoutes);
 
-// missionRoutes will be mounted in Phase 12.
+// Practice Mission topics are a static, predefined list rendered entirely
+// on the client (client/src/utils/missionTopics.ts) — no backend route is
+// needed for Feature 5, per the "keep it simple" requirement.
 
 export default router;
