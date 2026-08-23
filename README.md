@@ -8,6 +8,7 @@ random discussion topic to practice with once connected.
 
 ## Table of contents
 
+- [Live Demo](#live-demo)
 - [Features](#features)
 - [Tech stack](#tech-stack)
 - [Architecture](#architecture)
@@ -26,6 +27,13 @@ random discussion topic to practice with once connected.
 - [Deployment](#deployment)
 
 ---
+
+## Live Demo
+
+[Open FluentFeed Practice Partners](https://fluentfeed-practice-partners.onrender.com/)
+
+> Hosted on Render's free tier — the first request after a period of
+> inactivity may take a few seconds to wake the service up.
 
 ## Features
 
@@ -66,8 +74,8 @@ the active demo user across the whole app.
 ## Installation
 
 ```bash
-git clone <your-repo-url>
-cd fluentfeed
+git clone https://github.com/Rutikyadav71/fluentfeed-practice-partners.git
+cd fluentfeed-practice-partners
 
 cd client && npm install
 cd ../server && npm install
@@ -107,6 +115,11 @@ users with deliberate overlap across English level, learning goal,
 country, native language, and preferred time — enough variation that the
 matching algorithm produces a realistic spread of scores instead of
 everyone landing at 0% or 100%.
+
+> To seed the **production** database, point your local `MONGODB_URI` at
+> the same Atlas connection string used in production, then run
+> `npm run seed` from your machine — the script just connects and writes,
+> it doesn't matter where it's run from.
 
 ## Running the app
 
@@ -284,6 +297,10 @@ There's no real authentication. Instead:
 - **Single-origin CORS in dev.** Only one `CLIENT_URL` is allowed at a
   time; fine for local dev and typical single-frontend deployments, not
   for multiple simultaneous frontend origins.
+- **Free-tier hosting sleeps on inactivity.** The live demo runs on
+  Render's free tier, which spins down after 15 minutes with no traffic;
+  a keep-alive ping (cron-job.org, every 10 minutes) is used to mitigate
+  this, but the very first request after a longer gap may still be slow.
 
 ## Future improvements
 
@@ -301,7 +318,26 @@ There's no real authentication. Instead:
 ## Deployment
 
 The server can serve the built client itself, so the simplest deployment
-is a single Node process:
+is a single Node process — this is exactly how the live demo above is
+hosted.
+
+### How this project is deployed
+
+- **Hosting:** Render (single Web Service) — the Express server serves
+  the built React app directly from `client/dist`, so no separate static
+  host is needed.
+  - Build command: `cd client && npm install && npm run build && cd ../server && npm install && npm run build`
+  - Start command: `cd server && npm start`
+  - Environment variables set on Render: `NODE_ENV=production`,
+    `MONGODB_URI`, `CLIENT_URL`
+- **Database:** MongoDB Atlas free (M0) cluster. Network access is set to
+  allow all IPs (`0.0.0.0/0`) since Render's free-tier outbound IP isn't
+  fixed.
+- **Uptime:** Render's free tier sleeps after 15 minutes of inactivity; a
+  free cron-job.org job pings `/api/health` every 10 minutes to keep the
+  service warm.
+
+### General self-hosted deployment (alternative)
 
 1. Set production environment variables (`NODE_ENV=production`,
    `MONGODB_URI` pointing at your production database, `CLIENT_URL` if
